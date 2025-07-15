@@ -9,15 +9,16 @@ import searchReducer from './searchFileSlice'; // 👈 Add this
 
 
 
+import userAdminReducer from './userAdminSlice';
+
 const store = configureStore({
     reducer: {
         auth: authReducer,
         dashboard: dashboardReducer,
         received: receivedReducer,
-        sentFile: sentFileReducer, // Add this
-        search: searchReducer, // 👈 Add here
-
-
+        sentFile: sentFileReducer,
+        search: searchReducer,
+        userAdmin: userAdminReducer,
         // add more slices here later
     },
 });

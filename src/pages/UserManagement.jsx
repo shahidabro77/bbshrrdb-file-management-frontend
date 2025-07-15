@@ -1,91 +1,27 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUsers, toggleUserStatus, clearMessage } from '../redux/userAdminSlice';
 
 const UserManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [message, setMessage] = useState(null); // { text: '', isError: true/false }
-  const [loading, setLoading] = useState(false);
-
-  // Show message for 5 seconds
-  const showMessage = (text, isError = true) => {
-    setMessage({ text, isError });
-    setTimeout(() => setMessage(null), 5000);
-  };
-
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        showMessage('Please log in to view users.');
-        setTimeout(() => window.location.href = '/login', 2000);
-        return;
-      }
-
-      const response = await fetch('http://localhost:3000/api/users', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          showMessage('Unauthorized. Please log in again.');
-          setTimeout(() => window.location.href = '/login', 2000);
-          return;
-        }
-        throw new Error('Failed to fetch users');
-      }
-
-      const data = await response.json();
-      setUsers(data);
-    } catch (error) {
-      showMessage(error.message || 'An error occurred while fetching users.');
-      console.error('🚨 Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // Empty dependencies since token and showMessage are stable here
-
-  const toggleUserStatus = async (userId, currentStatus) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        showMessage('Please log in to perform this action.');
-        setTimeout(() => window.location.href = '/login', 2000);
-        return;
-      }
-
-      const response = await fetch(`http://localhost:3000/api/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ is_active: !currentStatus }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          showMessage('Unauthorized. Please log in again.');
-          setTimeout(() => window.location.href = '/login', 2000);
-          return;
-        }
-        throw new Error('Failed to update user status');
-      }
-
-      const result = await response.json();
-      showMessage(result.message, false);
-      loadUsers();
-    } catch (error) {
-      showMessage(error.message || 'An error occurred while updating user status.');
-      console.error('🚨 Failed to update status:', error);
-    }
-  };
+  const dispatch = useDispatch();
+  const { users, loading, error, message } = useSelector(state => state.userAdmin);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]); // Now loadUsers is stable due to useCallback
+    dispatch(fetchUsers());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (message || error) {
+      const timer = setTimeout(() => {
+        dispatch(clearMessage());
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, error, dispatch]);
+
+  const handleToggleStatus = (userId, currentStatus) => {
+    dispatch(toggleUserStatus({ userId, is_active: !currentStatus }));
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 text-gray-900">
@@ -98,15 +34,15 @@ const UserManagement = () => {
             </div>
 
             {/* Message */}
-            {message && (
+            {(message || error) && (
               <div
                 className={`mb-4 px-4 py-2 rounded border ${
-                  message.isError
+                  error
                     ? 'bg-red-100 border-red-400 text-red-700'
                     : 'bg-green-100 border-green-400 text-green-700'
                 }`}
               >
-                {message.text}
+                {error || message}
               </div>
             )}
 
@@ -149,12 +85,13 @@ const UserManagement = () => {
                         </td>
                         <td className="px-4 py-2">
                           <button
-                            onClick={() => toggleUserStatus(user.user_id, user.is_active)}
+                            onClick={() => handleToggleStatus(user.user_id, user.is_active)}
                             className={`px-3 py-1 text-sm rounded text-white ${
                               user.is_active
                                 ? 'bg-red-600 hover:bg-red-700'
                                 : 'bg-green-600 hover:bg-green-700'
                             }`}
+                            disabled={loading}
                           >
                             {user.is_active ? 'Deactivate' : 'Activate'}
                           </button>
