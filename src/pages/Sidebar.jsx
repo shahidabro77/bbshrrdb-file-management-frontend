@@ -18,7 +18,8 @@ const ICONS = {
 
 const Sidebar = () => {
   const user = useSelector(state => state.auth.user);
-  const role = user?.role;
+  let role = user?.role || user?.user?.role;
+  if (role) role = role.trim().toLowerCase();
   const items = SIDEBAR_ITEMS[role] || [];
 
   return (

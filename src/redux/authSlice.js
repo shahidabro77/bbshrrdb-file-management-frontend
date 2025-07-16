@@ -3,72 +3,89 @@ import axios from '../api';
 
 // Sidebar items by role for React sidebar
 export const SIDEBAR_ITEMS = {
-  'admin': [
+  'admin section': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/accounts_section', label: 'Accounts Section' },
-    { href: '/training_section', label: 'Training Section' },
-    { href: '/training_director', label: 'Training Director' },
-    { href: '/private_sector', label: 'Private Sector' },
-    { href: '/public_sector', label: 'Public Sector' },
-    { href: '/it_section', label: 'IT Section' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/qr_code', label: 'QR Code' },
     { href: '/user_management', label: 'User Management' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
-  'secratary (admin)': [
+  'secretary bbshrrdb': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/accounts_section', label: 'Accounts Section' },
-    { href: '/training_section', label: 'Training Section' },
-    { href: '/training_director', label: 'Training Director' },
-    { href: '/private_sector', label: 'Private Sector' },
-    { href: '/public_sector', label: 'Public Sector' },
-    { href: '/it_section', label: 'IT Section' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/qr_code', label: 'QR Code' },
     { href: '/user_management', label: 'User Management' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'accounts section': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/accounts_section', label: 'Accounts Section' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'training section': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/training_section', label: 'Training Section' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'training director': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/training_director', label: 'Training Director' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'private sector': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/private_sector', label: 'Private Sector' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'public sector': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/public_sector', label: 'Public Sector' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
   'it section': [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/it_section', label: 'IT Section' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
+  ],
+  'procurment section': [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/received_file', label: 'Received File' },
+    { href: '/sent_file', label: 'Sent File' },
+    { href: '/search_file', label: 'Search File' },
+    { href: '/profile_settings', label: 'Profile Settings' },
   ],
 };
 // Role constants for frontend usage
 export const ROLES = [
-  'admin',
-  'secratary (admin)',
   'accounts section',
-  'training section',
-  'training director',
-  'private sector',
-  'public sector',
+  'admin section',
   'it section',
+  'private sector',
+  'procurment section',
+  'public sector',
+  'secretary bbshrrdb',
+  'training director',
+  'training section',
 ];
 
 const tokenKey = 'jwtToken';
+const userKey = 'userObject';
 
 const setAuthToken = (token) => {
   if (token) {
@@ -91,6 +108,7 @@ export const loginUser = createAsyncThunk(
 
       // 👇 Fetch user info after login
       const userRes = await axios.get('/auth/me');
+      localStorage.setItem(userKey, JSON.stringify(userRes.data));
 
       return {
         token,
@@ -130,7 +148,14 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
 
 const initialState = {
   token: localStorage.getItem(tokenKey) || null,
-  user: null,
+  user: (() => {
+    try {
+      const stored = localStorage.getItem(userKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })(),
   loading: false,
   error: null,
   registrationSuccess: false,
@@ -183,6 +208,7 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, state => {
         state.token = null;
         state.user = null;
+        localStorage.removeItem(userKey);
       });
   },
 });
