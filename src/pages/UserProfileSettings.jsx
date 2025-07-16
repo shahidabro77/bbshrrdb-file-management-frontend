@@ -1,45 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from '../api';
 
 const UserProfileSettings = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: '',
-  });
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  const [errors, setErrors] = useState({});
-  const [successMsg, setSuccessMsg] = useState('');
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('/users/settings', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setProfile(res.data);
+      } catch (err) {
+        setError('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const validate = () => {
-    const errs = {};
-    if (!formData.fullName.trim()) errs.fullName = 'Full Name is required.';
-    if (!formData.email.trim()) errs.email = 'Email is required.';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'Email is invalid.';
-    if (formData.newPassword || formData.confirmNewPassword) {
-      if (formData.newPassword.length < 6) errs.newPassword = 'Password must be at least 6 characters.';
-      if (formData.newPassword !== formData.confirmNewPassword) errs.confirmNewPassword = 'Passwords do not match.';
-    }
-    return errs;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length === 0) {
-      setErrors({});
-      setSuccessMsg('Profile updated successfully!');
-      // TODO: Submit form data to server here
-    } else {
-      setErrors(validationErrors);
-      setSuccessMsg('');
+    setError(null);
+    setSuccess(null);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('/users/settings', profile, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSuccess('Profile updated successfully!');
+    } catch (err) {
+      setError('Failed to update profile');
     }
   };
+
+  if (loading) return <div className="p-6">Loading profile...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
 
   return (
     <main className="flex justify-center items-start min-h-screen bg-gray-100 pt-[20px] px-4">
@@ -50,9 +56,9 @@ const UserProfileSettings = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-          {successMsg && (
+          {success && (
             <div className="p-3 bg-green-100 text-green-700 rounded text-center">
-              {successMsg}
+              {success}
             </div>
           )}
 
@@ -64,16 +70,17 @@ const UserProfileSettings = () => {
             <input
               type="text"
               id="fullName"
-              name="fullName"
-              value={formData.fullName}
+              name="full_name"
+              value={profile.full_name || ''}
               onChange={handleChange}
               placeholder="John Doe"
               className={`w-full px-4 py-2 border rounded-md ${
-                errors.fullName ? 'border-red-500' : 'border-gray-300'
+                error ? 'border-red-500' : 'border-gray-300'
               } focus:outline-none focus:ring`}
+              required
             />
-            {errors.fullName && (
-              <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>
+            {error && (
+              <p className="text-red-600 text-sm mt-1">{error}</p>
             )}
           </div>
 
@@ -86,16 +93,32 @@ const UserProfileSettings = () => {
               type="email"
               id="email"
               name="email"
-              value={formData.email}
+              value={profile.email || ''}
               onChange={handleChange}
               placeholder="john@example.com"
               className={`w-full px-4 py-2 border rounded-md ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
+                error ? 'border-red-500' : 'border-gray-300'
               } focus:outline-none focus:ring`}
+              required
             />
-            {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+            {error && (
+              <p className="text-red-600 text-sm mt-1">{error}</p>
             )}
+          </div>
+
+          {/* Mobile */}
+          <div>
+            <label htmlFor="mobile" className="block font-semibold mb-1">
+              Mobile
+            </label>
+            <input
+              type="text"
+              id="mobile"
+              name="mobile"
+              value={profile.mobile || ''}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-4 py-2"
+            />
           </div>
 
           <hr className="border-t my-8" />
@@ -112,7 +135,7 @@ const UserProfileSettings = () => {
               type="password"
               id="currentPassword"
               name="currentPassword"
-              value={formData.currentPassword}
+              value={profile.currentPassword}
               onChange={handleChange}
               placeholder="••••••••"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring"
@@ -128,15 +151,15 @@ const UserProfileSettings = () => {
               type="password"
               id="newPassword"
               name="newPassword"
-              value={formData.newPassword}
+              value={profile.newPassword}
               onChange={handleChange}
               placeholder="••••••••"
               className={`w-full px-4 py-2 border rounded-md ${
-                errors.newPassword ? 'border-red-500' : 'border-gray-300'
+                error ? 'border-red-500' : 'border-gray-300'
               } focus:outline-none focus:ring`}
             />
-            {errors.newPassword && (
-              <p className="text-red-600 text-sm mt-1">{errors.newPassword}</p>
+            {error && (
+              <p className="text-red-600 text-sm mt-1">{error}</p>
             )}
           </div>
 
@@ -149,16 +172,16 @@ const UserProfileSettings = () => {
               type="password"
               id="confirmNewPassword"
               name="confirmNewPassword"
-              value={formData.confirmNewPassword}
+              value={profile.confirmNewPassword}
               onChange={handleChange}
               placeholder="••••••••"
               className={`w-full px-4 py-2 border rounded-md ${
-                errors.confirmNewPassword ? 'border-red-500' : 'border-gray-300'
+                error ? 'border-red-500' : 'border-gray-300'
               } focus:outline-none focus:ring`}
             />
-            {errors.confirmNewPassword && (
+            {error && (
               <p className="text-red-600 text-sm mt-1">
-                {errors.confirmNewPassword}
+                {error}
               </p>
             )}
           </div>
