@@ -11,8 +11,6 @@ const ReceivedFile = () => {
     file_description: '',
     received_on: '',
     received_from: '',
-    sent_to: '',             // ✅ Added
-    sent_on: '',             // ✅ Added
     category: '',
     remarks: '',
     attachments: [],
@@ -52,8 +50,6 @@ const ReceivedFile = () => {
           file_description: '',
           received_on: '',
           received_from: '',
-          sent_to: '',       // ✅ reset
-          sent_on: '',       // ✅ reset
           category: '',
           remarks: '',
           attachments: [],
@@ -119,7 +115,7 @@ const ReceivedFile = () => {
           </div>
 
           {/* Received / Sent Dates and From / To */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold mb-1">Received On</label>
               <input
@@ -148,28 +144,6 @@ const ReceivedFile = () => {
                 <option>Public Sector</option>
                 <option>I.T Section</option>
               </select>
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Sent To</label>
-              <input
-                type="text"
-                name="sent_to"
-                value={formData.sent_to}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded px-4 py-2"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Sent On</label>
-              <input
-                type="date"
-                name="sent_on"
-                value={formData.sent_on}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded px-4 py-2"
-              />
             </div>
           </div>
 

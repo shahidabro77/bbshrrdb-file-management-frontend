@@ -71,33 +71,39 @@ const UserManagement = () => {
                       </td>
                     </tr>
                   ) : (
-                    users.map((user) => (
-                      <tr key={user.user_id}>
-                        <td className="px-4 py-2">{user.user_id}</td>
-                        <td className="px-4 py-2">{user.full_name}</td>
-                        <td className="px-4 py-2">{user.email}</td>
-                        <td
-                          className={`px-4 py-2 font-medium ${
-                            user.is_active ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {user.is_active ? 'Active' : 'Inactive'}
-                        </td>
-                        <td className="px-4 py-2">
-                          <button
-                            onClick={() => handleToggleStatus(user.user_id, user.is_active)}
-                            className={`px-3 py-1 text-sm rounded text-white ${
-                              user.is_active
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-green-600 hover:bg-green-700'
+                    users
+                      .filter(user => user.role !== 'admin' && user.role !== 'secretary bbshrrdb')
+                      .map((user) => (
+                        <tr key={user.user_id}>
+                          <td className="px-4 py-2">{user.user_id}</td>
+                          <td className="px-4 py-2">{user.full_name}</td>
+                          <td className="px-4 py-2">{user.email}</td>
+                          <td
+                            className={`px-4 py-2 font-medium ${
+                              user.is_active ? 'text-green-600' : 'text-red-600'
                             }`}
-                            disabled={loading}
                           >
-                            {user.is_active ? 'Deactivate' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </td>
+                          <td className="px-4 py-2">
+                            <button
+                              onClick={() => handleToggleStatus(user.user_id, user.is_active)}
+                              className={`px-3 py-1 text-sm rounded text-white ${
+                                user.is_active
+                                  ? 'bg-red-600 hover:bg-red-700'
+                                  : 'bg-green-600 hover:bg-green-700'
+                              }`}
+                              disabled={
+                                loading ||
+                                user.role === 'admin' ||
+                                user.role === 'secretary bbshrrdb'
+                              }
+                            >
+                              {user.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>
